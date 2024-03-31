@@ -1,0 +1,15 @@
+.btn {
+  width: 100px;
+  border: transparent;
+  border-radius: 8px;
+  padding: 8px 10px;
+  background-color: rgba(0, 0, 0, 0.377);
+  transition: background-color 0.3s ease-in-out;
+  letter-spacing: 0.02em;
+  cursor: pointer;
+  color: white;
+  margin-bottom: 20px;
+}
+.btn:hover {
+  background-color: rgba(43, 46, 46, 0.829);
+}

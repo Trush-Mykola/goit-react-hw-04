@@ -1,49 +1,81 @@
 import { useEffect, useState } from "react";
-import ContactList from "../ContactList/ContactList";
-import SearchBox from "../SearchBox/SearchBox";
-import { nanoid } from "nanoid";
-import ContactForm from "../ContactForm/ContactForm";
-import css from "./App.module.css";
+import { fetchPhotos } from "../api";
 
-const contactsInfo = [
-  { id: "id-1", name: "Rosie Simpson", number: "459-12-56" },
-  { id: "id-2", name: "Hermione Kline", number: "443-89-12" },
-  { id: "id-3", name: "Eden Clements", number: "645-17-79" },
-  { id: "id-4", name: "Annie Copeland", number: "227-91-26" },
-];
+import css from "./App.module.css";
+import toast, { Toaster } from "react-hot-toast";
+import Modal from "react-modal";
+import ImageGallery from "../ImageGallery/ImageGallery";
+import SearchBox from "../SearchBar/SearchBar";
+import Loader from "../Loader/Loader";
+import ErrorMessage from "../ErrorMessage/ErrorMessage";
+import LoadMoreBtn from "../LoadMoreBtn/LoadMoreBtn";
 
 const App = () => {
-  const [contacts, setContacts] = useState(() => {
-    const stringifiedContacts = localStorage.getItem("allContactsData");
-    if (!stringifiedContacts) return contactsInfo;
-    const parsedContacts = JSON.parse(stringifiedContacts);
-    return parsedContacts;
-  });
-  const [filter, setFilter] = useState("");
+  const [photos, setPhotos] = useState(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const [isError, setIsError] = useState(false);
+  const [query, setQuery] = useState(null);
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [loadMore, setLoadMore] = useState(false);
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   useEffect(() => {
-    localStorage.setItem("allContactsData", JSON.stringify(contacts));
-  }, [contacts]);
+    if (query === null) return;
+    async function getPhotos() {
+      try {
+        setIsLoading(true);
+        const response = await fetchPhotos(page, query);
+        if (query.trim() === "") {
+          toast.error("Sorry, search field cant be empty!");
+          return;
+        } else if (!response.total_pages) {
+          toast("Sorry, we cant found photo for your request. Please try again ");
+        } else {
+          toast.success(`Wow, we found ${response.total} pictures`);
+        }
+        setPhotos(response.results);
+        setTotalPages(response.total_pages);
+      } catch (error) {
+        setIsError(true);
+      } finally {
+        setIsLoading(false);
+      }
+    }
+    getPhotos();
+  }, [page, query]);
 
-  const addContact = (contactData) => {
-    const newContact = {
-      ...contactData,
-      id: nanoid(),
-    };
-    setContacts([...contacts, newContact]);
+  const onSearchSubmit = (searchQuery) => {
+    setQuery(searchQuery);
   };
-  const deleteContact = (contactId) => {
-    setContacts(contacts.filter((contact) => contact.id !== contactId));
+
+  const handleLoadMore = async () => {
+    try {
+      setLoadMore(true);
+      const nextPage = page + 1;
+      const dataImages = await fetchPhotos(query, nextPage);
+      setPhotos((prevPhotos) => [...prevPhotos, ...dataImages.results]);
+      setPage(nextPage);
+    } catch (error) {
+      setIsError(true);
+    } finally {
+      setLoadMore(false);
+    }
   };
-  const filterContacts = contacts.filter((contact) => contact.name.toLowerCase().includes(filter.toLowerCase()) || contact.number.includes(filter));
+
+  const openModal = () => {
+    setIsModalOpen(true);
+  };
 
   return (
-    <div className={css.wrapper}>
-      <h1>Phonebook</h1>
-      <ContactForm onAdd={addContact} />
-      <SearchBox value={filter} onFilter={setFilter} />
-      <ContactList contacts={filterContacts} onDelete={deleteContact} />
-    </div>
+    <>
+      <Toaster position="top-right" reverseOrder={false} />
+      <SearchBox onSearch={onSearchSubmit} value={query} />
+      {isLoading && <Loader />}
+      {isError && <ErrorMessage />}
+      {photos && <ImageGallery photos={photos} onImageClick={openModal} />}
+      {page < totalPages && <LoadMoreBtn onClick={handleLoadMore} />}
+    </>
   );
 };
 
