@@ -1,11 +1,10 @@
 import Modal from "react-modal";
 import css from "./ImageCard.module.css";
 
-const ImageCard = ({ photo, openModal }) => {
+const ImageCard = ({ photo, onImageClick }) => {
   return (
-    <div onClick={() => openModal(photo)}>
-      <img className={css.img} src={photo.urls.small} alt={photo.description} width={400} height={300} />
-      <p>{photo.desk}</p>
+    <div className={css.imageCard}>
+      <img className={css.img} src={photo.urls.small} alt={photo.alt_description} onClick={() => onImageClick(photo)} />
     </div>
   );
 };

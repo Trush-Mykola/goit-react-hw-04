@@ -3,12 +3,12 @@ import { fetchPhotos } from "../api";
 
 import css from "./App.module.css";
 import toast, { Toaster } from "react-hot-toast";
-import Modal from "react-modal";
 import ImageGallery from "../ImageGallery/ImageGallery";
 import SearchBox from "../SearchBar/SearchBar";
 import Loader from "../Loader/Loader";
 import ErrorMessage from "../ErrorMessage/ErrorMessage";
 import LoadMoreBtn from "../LoadMoreBtn/LoadMoreBtn";
+import ImageModal from "../ImageModal/ImageModal";
 
 const App = () => {
   const [photos, setPhotos] = useState(null);
@@ -18,6 +18,7 @@ const App = () => {
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [loadMore, setLoadMore] = useState(false);
+  const [selectedPhoto, setSelectedPhoto] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   useEffect(() => {
@@ -34,7 +35,7 @@ const App = () => {
         } else {
           toast.success(`Wow, we found ${response.total} pictures`);
         }
-        setPhotos(response.results);
+        setPhotos((prevPhotos) => (page === 1 ? response.results : [...prevPhotos, ...response.results]));
         setTotalPages(response.total_pages);
       } catch (error) {
         setIsError(true);
@@ -53,8 +54,6 @@ const App = () => {
     try {
       setLoadMore(true);
       const nextPage = page + 1;
-      const dataImages = await fetchPhotos(query, nextPage);
-      setPhotos((prevPhotos) => [...prevPhotos, ...dataImages.results]);
       setPage(nextPage);
     } catch (error) {
       setIsError(true);
@@ -63,8 +62,16 @@ const App = () => {
     }
   };
 
-  const openModal = () => {
+  const openModal = (photo) => {
+    setSelectedPhoto(photo);
     setIsModalOpen(true);
+    document.body.style.overflow = "hidden";
+  };
+
+  const closeModal = () => {
+    setSelectedPhoto(null);
+    setIsModalOpen(false);
+    document.body.style.overflow = "";
   };
 
   return (
@@ -75,6 +82,7 @@ const App = () => {
       {isError && <ErrorMessage />}
       {photos && <ImageGallery photos={photos} onImageClick={openModal} />}
       {page < totalPages && <LoadMoreBtn onClick={handleLoadMore} />}
+      <ImageModal photo={selectedPhoto} isOpen={isModalOpen} onRequestClose={closeModal} />
     </>
   );
 };

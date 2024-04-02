@@ -2,13 +2,13 @@ import css from "./ImageGallery.module.css";
 
 import ImageCard from "../ImageCard/ImageCard";
 
-const ImageGallery = ({ photos, openModal }) => {
+const ImageGallery = ({ photos, onImageClick }) => {
   return (
     <ul className={css.ul}>
       {Array.isArray(photos) &&
         photos.map((photo) => (
           <li key={photo.id}>
-            <ImageCard openModal={openModal} photo={photo} />
+            <ImageCard onImageClick={onImageClick} photo={photo} />
           </li>
         ))}
     </ul>
