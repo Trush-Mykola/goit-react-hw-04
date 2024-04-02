@@ -2,6 +2,13 @@
   display: flex;
   flex-wrap: wrap;
   justify-content: center;
-  gap: 15px;
+  gap: 25px;
   margin-bottom: 20px;
+}
+.li {
+  cursor: zoom-in;
+  transition: transform 0.3s;
+}
+.li:hover {
+  transform: scale(1.05);
 }
