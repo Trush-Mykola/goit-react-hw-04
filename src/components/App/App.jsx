@@ -20,6 +20,7 @@ const App = () => {
   const [loadMore, setLoadMore] = useState(false);
   const [selectedPhoto, setSelectedPhoto] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [searchPerformed, setSearchPerformed] = useState(false);
 
   useEffect(() => {
     if (query === null) return;
@@ -27,13 +28,12 @@ const App = () => {
       try {
         setIsLoading(true);
         const response = await fetchPhotos(page, query);
-        if (query.trim() === "") {
-          toast.error("Sorry, search field cant be empty!");
-          return;
-        } else if (!response.total_pages) {
+        if (!response.total_pages) {
           toast("Sorry, we cant found photo for your request. Please try again ");
         } else {
-          toast.success(`Wow, we found ${response.total} pictures`);
+          if (searchPerformed) {
+            toast.success(`Wow, we found ${response.total} pictures`);
+          }
         }
         setPhotos((prevPhotos) => (page === 1 ? response.results : [...prevPhotos, ...response.results]));
         setTotalPages(response.total_pages);
@@ -44,10 +44,12 @@ const App = () => {
       }
     }
     getPhotos();
-  }, [page, query]);
+  }, [page, query, searchPerformed]);
 
   const onSearchSubmit = (searchQuery) => {
     setQuery(searchQuery);
+    setPage(1);
+    setSearchPerformed(true);
   };
 
   const handleLoadMore = async () => {
